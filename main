@@ -712,7 +712,10 @@ function library:addtab(tabname)
 
         function section:addtoggle(info)
             local toggle = {}
-            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.text = typeof(info.text)
+	    == 'string'
+	    and info.text
+	    or ''
             info.flag = typeof(info.flag) == 'string' and info.flag or info.text
             info.callback = typeof(info.callback) == 'function' and info.callback or function() end
             info.value = typeof(info.value) == 'boolean' and info.value or false
