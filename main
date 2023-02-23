@@ -1,1 +1,1637 @@
+--2/13/2023
+--// Variables //--
+getgenv().uis = game:GetService('UserInputService')
+getgenv().run = game:GetService('RunService')
+getgenv().http = game:GetService('HttpService')
+getgenv().camera = workspace.CurrentCamera or Instance.new('Camera',workspace)
 
+local library = {
+    title = 'obs proof!!!!!';
+    togglekey = Enum.KeyCode.Delete;
+
+    open = true;
+
+    watermark = true;
+    user = 'developer';
+    config = 'default';
+
+    theme = {
+        background = Color3.fromRGB(24,24,24);
+        inner = Color3.fromRGB(35,35,35);
+        accent = Color3.fromRGB(255, 119, 0);
+        line = Color3.fromRGB(64,64,64);
+        border = Color3.fromRGB(0,0,0);
+        textcolor = Color3.fromRGB(255,255,255);
+        font = 3;
+    };
+
+    whitelistedinputs = {
+		['MouseButton1']=true;
+		['MouseButton2']=true;
+		['MouseButton3']=true;
+	};
+	
+	blacklistedkeys = { 
+		['Unknown']=true;
+		['W']=true;
+		['A']=true;
+		['S']=true;
+		['D']=true;
+		['Slash']=true;
+		['Tab']=true;
+		['Escape']=true;
+	};
+
+    flags = {};
+    flags_functions = {};
+
+    drawings = {};
+    connections = {};
+    tabs = {};
+    interactable = {};
+}
+
+local classes = {
+    ['square'] = 'Square';
+    ['circle'] = 'Circle';
+    ['text'] = 'Text';
+    ['line'] = 'Line';
+    ['image'] = 'Image';
+    ['quad'] = 'Quad';
+    ['triangle'] = 'Triangle';
+}
+
+
+--// Functions //--
+function library:unload()
+    for index, connection in pairs(library.connections) do
+        connection:Disconnect()
+    end
+    for index, drawing in pairs(library.drawings) do
+        drawing.Remove()
+    end
+end
+
+if getgenv().library then
+    getgenv().library:unload()
+end
+getgenv().library = library
+
+task.wait(1)
+local main
+function draw(class,properties,notdraggable,ignoretable)
+    if classes[class] then class = classes[class] end
+    if not properties or typeof(properties) ~= 'table' then warn('invalid properties, either not given or is not a table.') return end
+
+    local drawn = Drawing.new(class)
+    for property,value in pairs(properties) do
+        drawn[property] = value
+    end
+    if not properties['ZIndex'] then
+        drawn.ZIndex = 1
+    end
+    if not ignoretable then
+        table.insert(library.drawings,drawn)
+    end
+    if not notdraggable then
+        local offset
+        if main then
+            offset = main.Position-drawn.Position
+        else
+            offset = Vector2.new(0,0,0)
+        end
+        table.insert(library.interactable,{drawing = drawn,offset = offset})
+    end
+
+    return drawn
+end
+function checkmousehovering(size,position)
+    local mousepos = uis:GetMouseLocation()
+    local pos = mousepos - position
+    local ypercentage = pos.Y/size.Y
+    local xpercentage = pos.X/size.X
+
+    if xpercentage > 1 or xpercentage < 0 or ypercentage > 1 or ypercentage < 0 then
+        return false
+    end
+    return true
+end
+function getlenghtfromtext(text)
+    local number = 0
+    for i = 1,#text do
+        number += 7
+    end
+    return number
+end
+main = draw('square',{
+    Color = library.theme.background;
+    Size = Vector2.new(500,650);
+    Position = Vector2.new(40,(camera.ViewportSize.Y/2)-325);
+    Visible = false;
+    Filled = true;
+})
+local topbar = draw('square',{
+    Color = library.theme.accent;
+    Size = Vector2.new(496,2);
+    Position = Vector2.new(main.Position.X+2,main.Position.Y+2);
+    Visible = false;
+    Filled = true;
+})
+local border1 = draw('square',{
+    Color = library.theme.border;
+    Size = Vector2.new(504,654);
+    Position = Vector2.new(main.Position.X-2,main.Position.Y-2);
+    ZIndex = 0;
+    Visible = false;
+    Filled = true;
+})
+local border2 = draw('square',{
+    Color = library.theme.line;
+    Size = Vector2.new(502,652);
+    Position = Vector2.new(main.Position.X-1,main.Position.Y-1);
+    ZIndex = 0;
+    Visible = false;
+    Filled = true;
+})
+local title = draw('text',{
+    Color = library.theme.textcolor;
+    Text = library.title;
+    OutlineColor = library.theme.border;
+    Position = main.Position + Vector2.new(6,6);
+    Font = library.theme.font;
+    Size = 15;
+    Outline = false;
+    Center = false;
+    Visible = false;
+})
+local inner = draw('square',{
+    Color = library.theme.inner;
+    Size = Vector2.new(490,620);
+    Position = main.Position + Vector2.new(5,25);
+    Visible = false;
+    Filled = true;
+    ZIndex = 2;
+})
+local innertop = draw('square',{
+    Color = library.theme.background;
+    Size = Vector2.new(490,20);
+    Position = inner.Position;
+    Visible = false;
+    Filled = true;
+    ZIndex = 2;
+})
+local line = draw('square',{
+    Color = library.theme.border;
+    Size = Vector2.new(490,1);
+    Position = innertop.Position + Vector2.new(0,20);
+    Visible = false;
+    Filled = true;
+    ZIndex = 2;
+})
+local border1 = draw('square',{
+    Color = library.theme.border;
+    Size = inner.Size + Vector2.new(4,4);
+    Position = Vector2.new(inner.Position.X-2,inner.Position.Y-2);
+    Visible = false;
+    Filled = true;
+})
+local border2 = draw('square',{
+    Color = library.theme.line;
+    Size = inner.Size + Vector2.new(2,2);
+    Position = Vector2.new(inner.Position.X-1,inner.Position.Y-1);
+    Visible = false;
+    Filled = true;
+})
+if library.watermark then
+    local watermarkborder2 = draw('square',{
+        Color = library.theme.border;
+        Size = Vector2.new(304,24);
+        Position = Vector2.new(108,8);
+        Visible = true;
+        Filled = true;
+        ZIndex = 0;
+    },true)
+    local watermarkborder1 = draw('square',{
+        Color = library.theme.line;
+        Size = Vector2.new(302,22);
+        Position = Vector2.new(109,9);
+        Visible = true;
+        Filled = true;
+        ZIndex = 0;
+        ZIndex = 0;
+    },true)
+    local watermarkbackground = draw('square',{
+        Color = library.theme.background;
+        Size = Vector2.new(300,20);
+        Position = Vector2.new(110,10);
+        Visible = true;
+        Filled = true;
+        ZIndex = 0;
+    },true)
+    local watermarktext = draw('text',{
+        Color = library.theme.textcolor;
+        Text = '';
+        OutlineColor = library.theme.border;
+        Position = watermarkbackground.Position + Vector2.new(5,3);
+        Font = library.theme.font;
+        Size = 15;
+        Outline = false;
+        Center = false;
+        Visible = true;
+        ZIndex = 0;
+    },true)
+
+    function updatewatermark()
+        watermarktext.Text = library.title .. ' | ' .. library.user .. ' | config: ' .. tostring(library.config);
+        watermarkbackground.Size = Vector2.new(getlenghtfromtext(watermarktext.Text) + 12,20)
+        watermarkborder1.Size = Vector2.new(getlenghtfromtext(watermarktext.Text) + 14,22)
+        watermarkborder2.Size = Vector2.new(getlenghtfromtext(watermarktext.Text) + 16,24)
+    end
+    updatewatermark()
+end
+
+
+function library:setopen(value)
+    library.open = value
+    for _,v in pairs(library.interactable) do
+        v.drawing.Visible = library.open
+    end
+end
+
+spawn(function()
+    library:setopen(library.open)
+end)
+
+table.insert(library.connections,
+    uis.InputBegan:Connect(function(input,ischatting)
+        if ischatting then return end
+        if input.UserInputType.Name == 'Keyboard' and input.KeyCode == library.togglekey then
+            library:setopen(not library.open)
+        end
+    end)
+)
+
+local colorpickerframe = draw('square',{
+    Color = library.theme.background;
+    Size = Vector2.new(215,200);
+    Position = Vector2.new((camera.ViewportSize.X/2)-110,(camera.ViewportSize.Y/2)-100);
+    Visible = false;
+    Filled = true;
+    ZIndex = 10;
+},true)
+local colorpickerframeborder2 = draw('square',{
+    Color = library.theme.border;
+    Size = colorpickerframe.Size + Vector2.new(4,4);
+    Position = colorpickerframe.Position + Vector2.new(-2,-2);
+    Visible = false;
+    Filled = true;
+    ZIndex = 9;
+},true)
+local colorpickerframeborder = draw('square',{
+    Color = library.theme.line;
+    Size = colorpickerframe.Size + Vector2.new(2,2);
+    Position = colorpickerframe.Position + Vector2.new(-1,-1);
+    Visible = false;
+    Filled = true;
+    ZIndex = 9;
+},true)
+local colorpickerimagebg = draw('square',{
+    Color = Color3.new(1,0,0);
+    Size = Vector2.new(190,190);
+    Position = colorpickerframe.Position + Vector2.new(5,5);
+    Visible = false;
+    Filled = true;
+    ZIndex = 10;
+},true)
+local colorpickerimage = draw('image',{
+    Size = Vector2.new(190,190);
+    Position = colorpickerframe.Position + Vector2.new(5,5);
+    Data = game:HttpGet('https://raw.githubusercontent.com/retardwastaken/drawing-library/main/assets/picker.png');
+    Visible = false;
+    ZIndex = 10;
+},true)
+local colorbar = draw('image',{
+    Size = Vector2.new(10,190);
+    Position = colorpickerframe.Position + Vector2.new(200,5);
+    Data = game:HttpGet('https://raw.githubusercontent.com/retardwastaken/drawing-library/main/assets/colorpickerbar.png');
+    Visible = false;
+    ZIndex = 10;
+},true)
+local colorbarslider = draw('square',{
+    Size = Vector2.new(10,4);
+    Position = colorbar.Position+Vector2.new(0,0);
+    Color = library.theme.line;
+    Filled = true;
+    Visible = false;
+    ZIndex = 11;
+},true)
+local colorbarsliderborder = draw('square',{
+    Size = Vector2.new(12,6);
+    Position = colorbarslider.Position+Vector2.new(-1,-1);
+    Color = library.theme.textcolor;
+    Filled = true;
+    Visible = false;
+    ZIndex = 10;
+},true)
+local colorpickercursor = draw('image',{
+    Size = Vector2.new(9,9);
+    Position = colorpickerimage.Position;
+    Data = game:HttpGet('https://raw.githubusercontent.com/retardwastaken/drawing-library/main/assets/colorpickercursor2.png');
+    Visible = false;
+    ZIndex = 10;
+},true)
+
+local hue,saturation,value
+
+local currentbutton
+
+function setcolorpicker(color)
+    hue,saturation,value = Color3.toHSV(color)
+    colorpickerimagebg.Color = Color3.fromHSV(hue,1,1)
+    local barpercentage = 1-hue
+    local xpercentage = 1-saturation
+    local ypercentage = 1-value
+    colorpickercursor.Position = colorpickerimage.Position + Vector2.new(xpercentage*colorpickerimage.Size.X,ypercentage*colorpickerimage.Size.Y) - colorpickercursor.Size/2 - Vector2.new(0,colorpickercursor.Size.Y/2)
+    colorbarslider.Position = colorbar.Position + Vector2.new(0,barpercentage*(colorbar.Size.Y-4))
+    colorbarsliderborder.Position = colorbarslider.Position+Vector2.new(-1,-1)
+end
+
+local whitelistopen = false
+
+function openpicker(pos,color)
+    whitelistopen = true
+
+    colorpickerframe.Visible = true
+    colorpickerframeborder2.Visible = true
+    colorpickerframeborder.Visible = true
+    colorpickerimagebg.Visible = true
+    colorpickerimage.Visible = true
+    colorbar.Visible = true
+    colorbarslider.Visible = true
+    colorbarsliderborder.Visible = true
+    colorpickercursor.Visible = true
+
+    colorpickerframe.Position = pos
+    colorpickerframeborder2.Position = colorpickerframe.Position + Vector2.new(-2,-2)
+    colorpickerframeborder.Position = colorpickerframe.Position + Vector2.new(-1,-1)
+    colorpickerimagebg.Position = colorpickerframe.Position + Vector2.new(5,5)
+    colorpickerimage.Position = colorpickerframe.Position + Vector2.new(5,5)
+    colorbar.Position = colorpickerframe.Position + Vector2.new(200,5)
+    colorbarslider.Position = colorbar.Position+Vector2.new(0,0)
+    colorbarsliderborder.Position = colorbarslider.Position+Vector2.new(-1,-1)
+    colorpickercursor.Position = colorpickerimage.Position
+
+    setcolorpicker(color)
+end
+
+table.insert(library.connections,
+    uis.InputBegan:Connect(function(input)
+        if not library.open then return end
+        if whitelistopen == true then whitelistopen = false return end
+        if not colorpickerframe.Visible then return end
+        if not checkmousehovering(colorpickerframe.Size, colorpickerframe.Position) then
+            colorpickerframe.Visible = false
+            colorpickerframeborder2.Visible = false
+            colorpickerframeborder.Visible = false
+            colorpickerimagebg.Visible = false
+            colorpickerimage.Visible = false
+            colorbar.Visible = false
+            colorbarslider.Visible = false
+            colorbarsliderborder.Visible = false
+            colorpickercursor.Visible = false
+            currentbutton = nil
+        end
+    end)
+)
+
+function updatecolorpicker()
+    local mousepos = uis:GetMouseLocation()
+    local pos = mousepos - colorpickerimage.Position
+    local ypercentage = math.clamp(pos.Y/colorpickerimage.Size.Y,0,1)
+    local xpercentage = math.clamp(pos.X/colorpickerimage.Size.X,0,1)
+    colorpickercursor.Position = colorpickerimage.Position + Vector2.new(xpercentage*colorpickerimage.Size.X,ypercentage*colorpickerimage.Size.Y) - colorpickercursor.Size/2 - Vector2.new(0,colorpickercursor.Size.Y/2)
+    saturation = 1-xpercentage
+    value = 1-ypercentage
+end
+
+function updatebar()
+    local mousepos = uis:GetMouseLocation()
+    local pos = mousepos - colorbar.Position
+    local barpercentage = math.clamp(pos.Y/colorbar.Size.Y,0,1)
+    colorbarslider.Position = colorbar.Position + Vector2.new(0,barpercentage*(colorbar.Size.Y-4))
+    colorbarsliderborder.Position = colorbarslider.Position+Vector2.new(-1,-1)
+    hue = 1-barpercentage
+    colorpickerimagebg.Color = Color3.fromHSV(hue,1,1)
+end
+
+local pickerdown = false
+local bardown = false
+
+table.insert(library.connections,
+    uis.InputBegan:Connect(function(input)
+        if not library.open then return end
+        if input.UserInputType.Name == 'MouseButton1' then
+            if checkmousehovering(colorpickerimage.Size,colorpickerimage.Position) then
+                pickerdown = true
+                updatecolorpicker()
+            elseif checkmousehovering(colorbar.Size,colorbar.Position) then
+                bardown = true
+                updatebar()
+            end
+        end
+    end)
+)
+table.insert(library.connections,
+    uis.InputChanged:Connect(function(input)
+        if input.UserInputType.Name == 'MouseMovement' then
+            if pickerdown then
+                updatecolorpicker()
+            elseif bardown then
+                updatebar()
+            end
+        end
+    end)
+)
+table.insert(library.connections,
+    uis.InputEnded:Connect(function(input)
+        if input.UserInputType.Name == 'MouseButton1' then
+            pickerdown = false
+            bardown = false
+        end
+    end)
+)
+
+setcolorpicker(library.theme.accent)
+
+local tabX = 0
+local selected = nil
+function selecttab(name)
+    if name == selected then return end
+    library.tabs[name].text.Color = library.theme.accent
+    if selected ~= nil then
+        library.tabs[selected].text.Color = library.theme.textcolor
+        for _,v in pairs(library.tabs[selected].instances) do
+            v.Visible = false
+        end
+    end
+    
+    for _,v in pairs(library.tabs[name].instances) do
+        v.Visible = true
+    end
+    selected = name
+end
+
+function round2(value,float)
+    return math.round(value/float)*float
+end
+
+function library:addtab(tabname)
+    local tab = {}
+
+    local sizeX = 8
+    sizeX += getlenghtfromtext(tabname)
+
+    local button = draw('square',{
+        Color = library.theme.background;
+        Size = Vector2.new(sizeX,20);
+        Position = innertop.Position + Vector2.new(tabX,0);
+        Visible = true;
+        Filled = true;
+        ZIndex = 3;
+    });
+    local text = draw('text',{
+        Color = library.theme.textcolor;
+        Text = tabname;
+        Position = button.Position + Vector2.new(4,3);
+        Font = library.theme.font;
+        Size = 15;
+        Outline = false;
+        Center = false;
+        Visible = true;
+        ZIndex = 3;
+    })
+    local border = draw('square',{
+        Color = library.theme.border;
+        Size = Vector2.new(1,20);
+        Position = button.Position + Vector2.new(button.Size.X,0);
+        Visible = true;
+        Filled = true;
+        ZIndex = 2;
+    });
+
+    table.insert(library.connections,
+        uis.InputBegan:Connect(function(input)
+            if not library.open then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if checkmousehovering(button.Size,button.Position) then
+                    selecttab(tabname)
+                end
+            end
+        end)
+    )
+
+    tabX += button.Size.X + 1
+
+    library.tabs[tabname] = {
+        text = text;
+        instances = {};
+    }
+
+    local side1y = 5
+    local side2y = 5
+
+    function tab:addsection(name,side)
+        local section = {}
+
+        local x = 0
+        local y = side1y
+        if side == 2 then
+            side2y += 5
+            y = side2y
+            x += inner.Size.X/2
+        else
+            side1y += 5
+            y = side1y
+        end
+
+        local frame = draw('square',{
+            Color = library.theme.line;
+            Size = Vector2.new((inner.Size.X/2)-10,9);
+            Position = inner.Position + Vector2.new(x + 5,y + 20);
+            Visible = false;
+            Filled = false;
+            ZIndex = 3;
+            Thickness = 1;
+        })
+        local textsize = getlenghtfromtext(name)
+        local hide = draw('square',{
+            Color = inner.Color;
+            Size = Vector2.new(textsize + 4,2);
+            Position = frame.Position + Vector2.new(4,-1);
+            Visible = false;
+            Filled = true;
+            ZIndex = 3;
+        })
+        local title = draw('text',{
+            Color = library.theme.textcolor;
+            Text = name;
+            Position = frame.Position + Vector2.new(6,-9);
+            Font = library.theme.font;
+            Size = 15;
+            Outline = false;
+            Center = false;
+            Visible = false;
+            ZIndex = 3;
+        })
+
+        if side == 2 then
+            side2y += frame.Size.Y
+        else
+            side1y += frame.Size.Y
+        end
+
+        table.insert(library.tabs[tabname].instances,frame)
+        table.insert(library.tabs[tabname].instances,hide)
+        table.insert(library.tabs[tabname].instances,title)
+
+        local instancey = 0
+
+        function section:addlabel(info)
+            local label = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.flag = typeof(info.flag) == 'string' and info.flag or info.text
+
+            local thisy = instancey
+            local xinstances = 0
+            if side == 2 then
+                side2y += 18
+            else
+                side1y += 18
+            end
+            instancey += 18
+            
+            frame.Size += Vector2.new(0,18)
+
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = frame.Position + Vector2.new(5,instancey-10);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+
+            function label:set(value)
+                info.text = value
+                text.Text = info.text
+            end
+
+            function label:addcolorpicker(info)
+                local picker = {}
+                info.value = typeof(info.value) == 'Color3' and info.value or Color3.new(1,1,1)
+                info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+                info.flag = typeof(info.flag) == 'string' and info.flag or ''
+
+                xinstances -= 6
+                
+                local button = draw('square',{
+                    Color = info.value;
+                    Size = Vector2.new(16,8);
+                    Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+12);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 4;
+                })
+                local buttonborder = draw('square',{
+                    Color = library.theme.border;
+                    Size = button.Size + Vector2.new(2,2);
+                    Position = button.Position + Vector2.new(-1,-1);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 3;
+                })
+                xinstances -= 16
+                
+                function picker:set(value)
+                    if value == info.value then return end
+                    if typeof(value) == 'table' then value = Color3.new(value.h,value.s,value.v) end
+                    info.value = value
+                    button.Color = info.value
+
+                    local h,s,v = Color3.toHSV(info.value)
+                    library.flags[info.flag] = {h = h,s = s, v = v}
+                    info.callback(info.value)
+                end
+
+                local function update()
+                    button.Color = Color3.fromHSV(hue,saturation,value)
+                    picker:set(button.Color)
+                end
+
+                table.insert(library.connections,
+                    uis.InputBegan:Connect(function(input)
+                        if not library.open then return end
+                        if colorpickerframe.Visible then return end
+                        if input.UserInputType.Name == 'MouseButton1' and checkmousehovering(button.Size + Vector2.new(0,18-button.Size.Y),button.Position-Vector2.new(0,18-button.Size.Y)) then
+                            openpicker(button.Position + Vector2.new(button.Size.X + 6,0),button.Color)
+                            currentbutton = button
+                        end
+                    end)
+                )
+                table.insert(library.connections,
+                    uis.InputChanged:Connect(function(input)
+                        if not library.open then return end
+                        if currentbutton ~= button then return end
+
+                        if input.UserInputType.Name == 'MouseMovement' then
+                            update()
+                        end
+                    end)
+                )
+
+                table.insert(library.tabs[tabname].instances,button)
+                table.insert(library.tabs[tabname].instances,buttonborder)
+
+                library.flags_functions[info.flag] = picker
+
+                return picker
+            end
+
+            table.insert(library.tabs[tabname].instances,text)
+
+            library.flags_functions[info.flag] = label
+
+            return label
+        end
+
+        function section:addtoggle(info)
+            local toggle = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.flag = typeof(info.flag) == 'string' and info.flag or info.text
+            info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+            info.value = typeof(info.value) == 'boolean' and info.value or false
+
+            if side == 2 then
+                side2y += 18
+            else
+                side1y += 18
+            end
+            local thisy = instancey
+            instancey += 18
+            frame.Size += Vector2.new(0,18)
+
+            local border = draw('square',{
+                Color = library.theme.border;
+                Size = Vector2.new(10,10);
+                Position = frame.Position + Vector2.new(5,instancey-6);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local button = draw('square',{
+                Color = library.theme.background;
+                Size = Vector2.new(8,8);
+                Position = frame.Position + Vector2.new(6,instancey-5);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = button.Position + Vector2.new(15,-5);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+
+            function toggle:set(value)
+                info.value = value
+
+                button.Color = (info.value and library.theme.accent) or (not info.value and library.theme.background)
+
+                library.flags[info.flag] = info.value
+                info.callback(info.value)
+            end
+
+            toggle:set(info.value)
+
+            local xinstances = 0
+
+            function toggle:addcolorpicker(info)
+                local picker = {}
+                info.value = typeof(info.value) == 'Color3' and info.value or Color3.new(1,1,1)
+                info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+                info.flag = typeof(info.flag) == 'string' and info.flag or ''
+
+                xinstances -= 6
+                
+                local button = draw('square',{
+                    Color = info.value;
+                    Size = Vector2.new(16,8);
+                    Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+12);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 4;
+                })
+                local buttonborder = draw('square',{
+                    Color = library.theme.border;
+                    Size = button.Size + Vector2.new(2,2);
+                    Position = button.Position + Vector2.new(-1,-1);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 3;
+                })
+                xinstances -= 16
+                
+                function picker:set(value)
+                    if value == info.value then return end
+                    if typeof(value) == 'table' then value = Color3.new(value.h,value.s,value.v) end
+                    info.value = value
+                    button.Color = info.value
+
+                    local h,s,v = Color3.toHSV(info.value)
+                    library.flags[info.flag] = {h = h,s = s, v = v}
+                    info.callback(info.value)
+                end
+
+                local function update()
+                    button.Color = Color3.fromHSV(hue,saturation,value)
+                    picker:set(button.Color)
+                end
+
+                table.insert(library.connections,
+                    uis.InputBegan:Connect(function(input)
+                        if not library.open then return end
+                        if colorpickerframe.Visible then return end
+                        if input.UserInputType.Name == 'MouseButton1' and checkmousehovering(button.Size + Vector2.new(0,18-button.Size.Y),button.Position-Vector2.new(0,18-button.Size.Y)) then
+                            openpicker(button.Position + Vector2.new(button.Size.X + 6,0),button.Color)
+                            currentbutton = button
+                        end
+                    end)
+                )
+                table.insert(library.connections,
+                    uis.InputChanged:Connect(function(input)
+                        if not library.open then return end
+                        if currentbutton ~= button then return end
+
+                        if input.UserInputType.Name == 'MouseMovement' then
+                            update()
+                        end
+                    end)
+                )
+
+                table.insert(library.tabs[tabname].instances,button)
+                table.insert(library.tabs[tabname].instances,buttonborder)
+
+                library.flags_functions[info.flag] = picker
+
+                return picker
+            end
+
+            table.insert(library.connections,
+                uis.InputBegan:Connect(function(input)
+                    if not library.open then return end
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        if checkmousehovering(Vector2.new(frame.Size.X+xinstances,18),Vector2.new(frame.Position.X,button.Position.Y-5)) then
+                            toggle:set(not info.value)
+                        end
+                    end
+                end)
+            )
+
+            table.insert(library.tabs[tabname].instances,border)
+            table.insert(library.tabs[tabname].instances,button)
+            table.insert(library.tabs[tabname].instances,text)
+
+            library.flags_functions[info.flag] = toggle
+
+            return toggle
+        end
+
+        function section:addbutton(info)
+            local buttontbl = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.flag = typeof(info.flag) == 'string' and info.flag or info.text
+            info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+
+            local thisy = instancey
+            local xinstances = 0
+            if side == 2 then
+                side2y += 18
+            else
+                side1y += 18
+            end
+            instancey += 22
+            frame.Size += Vector2.new(0,18)
+
+            local border = draw('square',{
+                Color = library.theme.border;
+                Size = Vector2.new(frame.Size.X-10,16);
+                Position = frame.Position + Vector2.new(5,instancey-15);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local button = draw('square',{
+                Color = library.theme.background;
+                Size = Vector2.new(frame.Size.X-12,14);
+                Position = frame.Position + Vector2.new(6,instancey-14);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = button.Position + Vector2.new(button.Size.X/2,-1);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = true;
+                Visible = false;
+                ZIndex = 3;
+            })
+
+            function buttontbl:activate()
+                info.callback()
+            end
+
+            table.insert(library.connections,
+                uis.InputBegan:Connect(function(input)
+                    if not library.open then return end
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        if checkmousehovering(button.Size,button.Position) then
+                            buttontbl:activate()
+                        end
+                    end
+                end)
+            )
+
+            function buttontbl:addcolorpicker(info)
+                local picker = {}
+                info.value = typeof(info.value) == 'Color3' and info.value or Color3.new(1,1,1)
+                info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+                info.flag = typeof(info.flag) == 'string' and info.flag or ''
+
+                button.Size -= Vector2.new(6,0)
+                button.Size -= Vector2.new(16,0)
+                border.Size -= Vector2.new(6,0)
+                border.Size -= Vector2.new(16,0)
+
+                xinstances -= 6
+                
+                local button = draw('square',{
+                    Color = info.value;
+                    Size = Vector2.new(16,8);
+                    Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+11);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 4;
+                })
+                local buttonborder = draw('square',{
+                    Color = library.theme.border;
+                    Size = button.Size + Vector2.new(2,2);
+                    Position = button.Position + Vector2.new(-1,-1);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 3;
+                })
+                xinstances -= 16
+                
+                function picker:set(value)
+                    if value == info.value then return end
+                    if typeof(value) == 'table' then value = Color3.new(value.h,value.s,value.v) end
+                    info.value = value
+                    button.Color = info.value
+
+                    local h,s,v = Color3.toHSV(info.value)
+                    library.flags[info.flag] = {h = h,s = s, v = v}
+                    info.callback(info.value)
+                end
+
+                local function update()
+                    button.Color = Color3.fromHSV(hue,saturation,value)
+                    picker:set(button.Color)
+                end
+
+                table.insert(library.connections,
+                    uis.InputBegan:Connect(function(input)
+                        if not library.open then return end
+                        if colorpickerframe.Visible then return end
+                        if input.UserInputType.Name == 'MouseButton1' and checkmousehovering(button.Size + Vector2.new(0,18-button.Size.Y),button.Position-Vector2.new(0,18-button.Size.Y)) then
+                            openpicker(button.Position + Vector2.new(button.Size.X + 6,0),button.Color)
+                            currentbutton = button
+                        end
+                    end)
+                )
+                table.insert(library.connections,
+                    uis.InputChanged:Connect(function(input)
+                        if not library.open then return end
+                        if currentbutton ~= button then return end
+
+                        if input.UserInputType.Name == 'MouseMovement' then
+                            update()
+                        end
+                    end)
+                )
+
+                table.insert(library.tabs[tabname].instances,button)
+                table.insert(library.tabs[tabname].instances,buttonborder)
+
+                library.flags_functions[info.flag] = picker
+
+                return picker
+            end
+
+            table.insert(library.tabs[tabname].instances,border)
+            table.insert(library.tabs[tabname].instances,button)
+            table.insert(library.tabs[tabname].instances,text)
+
+            library.flags_functions[info.flag] = buttontbl
+
+            return buttontbl
+        end
+
+        function section:addslider(info)
+            local slider = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.flag = typeof(info.flag) == 'string' and info.flag or info.text
+            info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+            info.min = typeof(info.min) == 'number' and info.min or 0
+            info.max = typeof(info.max) == 'number' and info.max or 0
+            info.value = typeof(info.value) == 'number' and info.value or info.min
+            info.float = typeof(info.value) == 'number' and info.float or 1
+            info.suffix = info.suffix and tostring(info.suffix) or ''
+
+            local thisy = instancey
+            local xinstances = 0
+            instancey += 30
+            frame.Size += Vector2.new(0,30)
+            if side == 2 then
+                side2y += 30
+            else
+                side1y += 30
+            end
+
+            local sliderdown = false
+
+            local border = draw('square',{
+                Color = library.theme.border;
+                Size = Vector2.new(frame.Size.X-10,6);
+                Position = frame.Position + Vector2.new(5,instancey-6);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local bar = draw('square',{
+                Color = library.theme.background;
+                Size = Vector2.new(frame.Size.X-12,4);
+                Position = frame.Position + Vector2.new(6,instancey-5);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = frame.Position + Vector2.new(5,instancey-25);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+            local inner = draw('square',{
+                Color = library.theme.accent;
+                Size = Vector2.new(0,4);
+                Position = bar.Position;
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local buttonbackground = draw('square',{
+                Color = library.theme.border;
+                Size = Vector2.new(6,10);
+                Position = bar.Position-Vector2.new(1,4);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            local button = draw('square',{
+                Color = library.theme.accent;
+                Size = Vector2.new(4,8);
+                Position = bar.Position-Vector2.new(0,3);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+
+            table.insert(library.tabs[tabname].instances,border)
+            table.insert(library.tabs[tabname].instances,bar)
+            table.insert(library.tabs[tabname].instances,text)
+            table.insert(library.tabs[tabname].instances,inner)
+            table.insert(library.tabs[tabname].instances,buttonbackground)
+            table.insert(library.tabs[tabname].instances,button)
+
+            function slider:set(value)
+                if not value then value = info.value end
+                info.value = value
+                info.value = math.clamp(round2(info.value,info.float), info.min, info.max)
+                local percent = 1 - ((info.max - info.value) / (info.max - info.min))
+                text.Text = info.text .. ': '.. info.value .. info.suffix
+                inner.Size = Vector2.new(percent * bar.Size.X, bar.Size.Y)
+                buttonbackground.Position = bar.Position + Vector2.new(percent*bar.Size.X,0) + Vector2.new(-3,-3)
+                button.Position = buttonbackground.Position + Vector2.new(1,1)
+
+                for _,v in pairs(library.interactable) do
+                    if v.drawing == buttonbackground then
+                        v.offset = main.Position-buttonbackground.Position
+                    elseif v.drawing == button then
+                        v.offset = main.Position-button.Position
+                    end
+                end
+
+                library.flags[info.flag] = info.value
+
+                info.callback(info.value)
+            end
+
+            function slider:addcolorpicker(info)
+                local picker = {}
+                info.value = typeof(info.value) == 'Color3' and info.value or Color3.new(1,1,1)
+                info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+                info.flag = typeof(info.flag) == 'string' and info.flag or ''
+
+                xinstances -= 6
+                
+                local button = draw('square',{
+                    Color = info.value;
+                    Size = Vector2.new(16,8);
+                    Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+12);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 4;
+                })
+                local buttonborder = draw('square',{
+                    Color = library.theme.border;
+                    Size = button.Size + Vector2.new(2,2);
+                    Position = button.Position + Vector2.new(-1,-1);
+                    Visible = false;
+                    Filled = true;
+                    ZIndex = 3;
+                })
+                xinstances -= 16
+                
+                function picker:set(value)
+                    if value == info.value then return end
+                    if typeof(value) == 'table' then value = Color3.new(value.h,value.s,value.v) end
+                    info.value = value
+                    button.Color = info.value
+
+                    local h,s,v = Color3.toHSV(info.value)
+                    library.flags[info.flag] = {h = h,s = s, v = v}
+                    info.callback(info.value)
+                end
+
+                local function update()
+                    button.Color = Color3.fromHSV(hue,saturation,value)
+                    picker:set(button.Color)
+                end
+
+                table.insert(library.connections,
+                    uis.InputBegan:Connect(function(input)
+                        if not library.open then return end
+                        if colorpickerframe.Visible then return end
+                        if input.UserInputType.Name == 'MouseButton1' and checkmousehovering(button.Size + Vector2.new(0,18-button.Size.Y),button.Position-Vector2.new(0,18-button.Size.Y)) then
+                            openpicker(button.Position + Vector2.new(button.Size.X + 6,0),button.Color)
+                            currentbutton = button
+                        end
+                    end)
+                )
+                table.insert(library.connections,
+                    uis.InputChanged:Connect(function(input)
+                        if not library.open then return end
+                        if currentbutton ~= button then return end
+
+                        if input.UserInputType.Name == 'MouseMovement' then
+                            update()
+                        end
+                    end)
+                )
+
+                table.insert(library.tabs[tabname].instances,button)
+                table.insert(library.tabs[tabname].instances,buttonborder)
+
+                library.flags_functions[info.flag] = picker
+
+                return picker
+            end
+
+            function slider:get()
+                return info.value
+            end
+
+            function update()
+                local percent = math.clamp(uis:GetMouseLocation().X - bar.Position.X, 0, bar.Size.X) / bar.Size.X
+                local value = math.floor((info.min + (info.max - info.min) * percent) / info.float) * info.float
+                value = math.clamp(value, info.min, info.max)
+                slider:set(value)
+            end
+
+            table.insert(library.connections,
+                uis.InputBegan:Connect(function(input)
+                    if not library.open then return end
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        if checkmousehovering(Vector2.new(frame.Size.X,18),Vector2.new(frame.Position.X,bar.Position.Y-10)) then
+                            sliderdown = true
+                            update()
+                        end
+                    end
+                end)
+            )
+            table.insert(library.connections,
+                uis.InputChanged:Connect(function(input)
+                    if not library.open then return end
+                    if not sliderdown then return end
+                    if input.UserInputType == Enum.UserInputType.MouseMovement then
+                        update()
+                    end
+                end)
+            )
+            table.insert(library.connections,
+                uis.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        sliderdown = false
+                    end
+                end)
+            )
+
+            slider:set(info.value)
+
+            library.flags_functions[info.flag] = slider
+
+            return slider
+        end
+
+        function section:addkeybind(info)
+            local keybind = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.flag = typeof(info.flag) == 'string' and info.flag or info.text
+            info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+            info.mode = info.mode == 'hold' and info.mode or 'toggle'
+            info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'EnumItem') and info.value or nil
+
+            instancey += 18
+            frame.Size += Vector2.new(0,18)
+            if side == 2 then
+                side2y += 18
+            else
+                side1y += 18
+            end
+
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = frame.Position + Vector2.new(5,instancey-15);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+            local key = draw('text',{
+                Color = library.theme.textcolor;
+                Text = '[none]';
+                Position = frame.Position + Vector2.new(frame.Size.X-5,instancey-15);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+
+            table.insert(library.tabs[tabname].instances,text)
+            table.insert(library.tabs[tabname].instances,key)
+
+            local currentlenght = 0
+            local editing = false
+
+            function updatePosition()
+                local offset = getlenghtfromtext(key.Text)
+                currentlenght = offset
+                key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,instancey-15)
+                for _,v in pairs(library.interactable) do
+                    if v.drawing == key then
+                        v.offset = main.Position-key.Position
+                    end
+                end
+            end
+            updatePosition()
+
+            local shortcutnames = {
+                ['mousebutton1'] = 'mb1';
+                ['mousebutton2'] = 'mb2';
+                ['mousebutton3'] = 'mb3';
+            }
+
+            function keybind:set(value)
+                editing = false
+                if typeof(value) == 'EnumItem' then value = value.Name end
+                info.value = string.lower(tostring(value))
+                if info.value == 'nil' then info.value = 'none' end
+                if shortcutnames[info.value] then
+                    key.Text = '[' .. shortcutnames[info.value] .. ']'
+                else
+                    key.Text = '[' .. info.value .. ']'
+                end
+                updatePosition()
+                library.flags[info.flag] = info.value
+            end
+
+            keybind:set(info.value)
+
+            local down = false
+
+            table.insert(library.connections,
+                uis.InputBegan:connect(function(input)
+                    if not library.open then return end
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        if checkmousehovering(Vector2.new(currentlenght,18),key.Position) then
+                            editing = true
+                            key.Text = '[...]'
+                            updatePosition()
+                        end
+                    end
+                end)
+            )
+            table.insert(library.connections,
+                uis.InputBegan:Connect(function(input,chatting)
+                    if chatting then return end
+                    if editing then
+                        if library.whitelistedinputs[input.UserInputType.Name] then
+                            keybind:set(input.UserInputType)
+                        elseif not library.blacklistedkeys[input.KeyCode.Name] then
+                            keybind:set(input.KeyCode.Name)
+                        end
+                    else
+                        if info.mode == 'hold' and (string.lower(input.UserInputType.Name) == info.value or string.lower(input.KeyCode.Name) == info.value) then
+                            info.callback(true)
+                        elseif (string.lower(input.UserInputType.Name) == info.value or string.lower(input.KeyCode.Name) == info.value) then
+                            down = not down
+                            info.callback(down)
+                        end
+                    end
+                end)
+            )
+            table.insert(library.connections,
+                uis.InputEnded:Connect(function(input)
+                    if chatting then return end
+                    if info.mode == 'hold' and (string.lower(input.UserInputType.Name) == info.value or string.lower(input.KeyCode.Name) == info.value) then
+                        info.callback(false)
+                    end
+                end)
+            )
+
+            library.flags_functions[info.flag] = keybind
+
+            return keybind
+        end
+
+        function section:addcolorpicker(info)
+            local picker = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.value = typeof(info.value) == 'Color3' and info.value or Color3.new(1,1,1)
+            info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+            info.flag = typeof(info.flag) == 'string' and info.flag or ''
+
+            local thisy = instancey
+            local xinstances = 0
+            if side == 2 then
+                side2y += 18
+            else
+                side1y += 18
+            end
+            instancey += 18
+            
+            frame.Size += Vector2.new(0,18)
+
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = frame.Position + Vector2.new(5,instancey-14);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+
+            xinstances -= 6
+            
+            local button = draw('square',{
+                Color = info.value;
+                Size = Vector2.new(16,8);
+                Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+8);
+                Visible = false;
+                Filled = true;
+                ZIndex = 4;
+            })
+            local buttonborder = draw('square',{
+                Color = library.theme.border;
+                Size = button.Size + Vector2.new(2,2);
+                Position = button.Position + Vector2.new(-1,-1);
+                Visible = false;
+                Filled = true;
+                ZIndex = 3;
+            })
+            xinstances -= 16
+            
+            function picker:set(value)
+                if value == info.value then return end
+                if typeof(value) == 'table' then value = Color3.new(value.h,value.s,value.v) end
+                info.value = value
+                button.Color = info.value
+
+                local h,s,v = Color3.toHSV(info.value)
+                library.flags[info.flag] = {h = h,s = s, v = v}
+                info.callback(info.value)
+            end
+
+            local function update()
+                button.Color = Color3.fromHSV(hue,saturation,value)
+                picker:set(button.Color)
+            end
+
+            table.insert(library.connections,
+                uis.InputBegan:Connect(function(input)
+                    if not library.open then return end
+                    if colorpickerframe.Visible then return end
+                    if input.UserInputType.Name == 'MouseButton1' and checkmousehovering(button.Size + Vector2.new(0,18-button.Size.Y),button.Position-Vector2.new(0,18-button.Size.Y)) then
+                        openpicker(button.Position + Vector2.new(button.Size.X + 6,0),button.Color)
+                        currentbutton = button
+                    end
+                end)
+            )
+            table.insert(library.connections,
+                uis.InputChanged:Connect(function(input)
+                    if not library.open then return end
+                    if currentbutton ~= button then return end
+
+                    if input.UserInputType.Name == 'MouseMovement' then
+                        update()
+                    end
+                end)
+            )
+
+            table.insert(library.tabs[tabname].instances,button)
+            table.insert(library.tabs[tabname].instances,buttonborder)
+
+            library.flags_functions[info.flag] = picker
+
+            table.insert(library.tabs[tabname].instances,text)
+
+            library.flags_functions[info.flag] = picker
+
+            return picker
+        end
+
+        function section:adddropdown(info)
+            local dropdown = {}
+            info.text = typeof(info.text) == 'string' and info.text or ''
+            info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'table') and info.value or nil
+            info.callback = typeof(info.callback) == 'function' and info.callback or function() end
+            info.flag = typeof(info.flag) == 'string' and info.flag or ''
+            info.options = typeof(info.options) == 'table' and info.options or {}
+            info.multi = typeof(info.multi) == 'boolean' and info.multi or false
+
+            if info.multi and not info.value then
+                info.value = {}
+            elseif not info.value then
+                info.value = 'none'
+            end
+
+            local valuestr = 'none'
+            local open = false
+
+            local thisy = instancey
+            local xinstances = 0
+            instancey += 36
+            frame.Size += Vector2.new(0,36)
+
+            if side == 2 then
+                side2y += 36
+            else
+                side1y += 36
+            end
+
+            local newtable = {}
+            local index = 0
+            for _,v in pairs(info.options) do
+                index += 1
+                newtable[index] = v
+            end
+            info.options = newtable 
+
+            local text = draw('text',{
+                Color = library.theme.textcolor;
+                Text = info.text;
+                Position = frame.Position + Vector2.new(5,instancey-32);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = false;
+                Visible = false;
+                ZIndex = 3;
+            })
+            local button = draw('square',{
+                Color = library.theme.background;
+                Size = Vector2.new(frame.Size.X-12,14);
+                Position = frame.Position + Vector2.new(6,instancey-14);
+                Visible = false;
+                Filled = true;
+                ZIndex = 4;
+            })
+            local buttonborder = draw('square',{
+                Color = library.theme.border;
+                Size = button.Size + Vector2.new(2,2);
+                Position = button.Position + Vector2.new(-1,-1);
+                Filled = true;
+                Visible = true;
+                ZIndex = 3;
+            })
+            local buttontext = draw('text',{
+                Color = library.theme.textcolor;
+                Text = valuestr;
+                Position = button.Position + Vector2.new(button.Size.X/2,0);
+                Font = library.theme.font;
+                Size = 15;
+                Outline = false;
+                Center = true;
+                Visible = false;
+                ZIndex = 5;
+            })
+
+            function dropdown:set(value)
+                info.value = value
+                if info.multi then
+                    valuestr = table.concat(info.value,', ')
+                    valuestr:sub(1,-3)
+                    if #valuestr>20 then
+                        valuestr = valuestr:sub(1,20)
+                        valuestr = valuestr..'..'
+                    end
+                else
+                    valuestr = info.value
+                end
+                library.flags[info.flag] = info.value
+                info.callback(info.value)
+                buttontext.Text = valuestr
+            end
+
+            dropdown:set(info.value)
+
+            function dropdown:updateoptions(options)
+                local newtable = {}
+                local index = 0
+                for _,v in pairs(options) do
+                    index += 1
+                    newtable[index] = v
+                end
+                info.options = newtable
+                dropdown:set(options)
+            end
+
+            
+
+            table.insert(library.tabs[tabname].instances,text)
+            table.insert(library.tabs[tabname].instances,button)
+            table.insert(library.tabs[tabname].instances,buttontext)
+            table.insert(library.tabs[tabname].instances,buttonborder)
+
+            return dropdown
+        end
+
+        return section
+    end
+
+    return tab
+end
+
+--// Draggable //--
+local dragging = false
+local offset
+
+local function updatedrag()
+    for _,v in pairs(library.interactable) do
+        v.drawing.Position = uis:GetMouseLocation() + offset - v.offset
+    end
+end
+
+table.insert(library.connections,
+    uis.InputChanged:Connect(function(input)
+        if not library.open then return end
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updatedrag()
+        end
+    end)
+)
+table.insert(library.connections,
+    uis.InputBegan:Connect(function(input)
+        if not library.open then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local within = checkmousehovering(Vector2.new(500,20),main.Position)
+            if within then
+                offset = main.Position-uis:GetMouseLocation()
+                dragging = true
+                updatedrag()
+            end
+        end
+    end)
+)
+table.insert(library.connections,
+    uis.InputEnded:Connect(function(input)
+        if not library.open then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+)
+--// END OF LIBRARY //--
+
+local tab = library:addtab('tab1')
+library:addtab('tab2')
+local section = tab:addsection('section')
+section:addtoggle({text = 'toggle',flag = 'toggle',value = false,callback = function(value)
+    print(value)
+end}):addcolorpicker({flag = 'colorpicker',value = Color3.new(1,1,1),callback = function(value)
+    print(value)
+end})
+section:addlabel({text = 'label'})
+section:addbutton({text = 'button',flag = 'button',callback = function()
+    print('pressed')
+end})
+section:addslider({text = 'slider',flag = 'slider',value = -10,min = -20, max = 100, suffix = '%',callback = function(value)
+    print(value)
+end})
+section:addkeybind({text = 'keybind',flag = 'keybind',value = Enum.KeyCode.Space,callback = function(value)
+    print(value)
+end})
+section:addcolorpicker({text = 'colorpicker',flag = 'colorpicker2',value = Color3.new(1,1,0),callback = function(value)
+    print(value)
+end})
+section:adddropdown({text = 'dropdown',flag = 'dropdown',options = {'option1','option2','option3','option4'},callback = function(value)
+    print(value)
+end})
+
+selecttab('tab1')
