@@ -1233,6 +1233,7 @@ function library:addtab(tabname)
             info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'EnumItem') and info.value or nil
 
             instancey += 18
+            local thisy = instancey
             frame.Size += Vector2.new(0,18)
             if side == 2 then
                 side2y += 18
@@ -1260,7 +1261,7 @@ function library:addtab(tabname)
                 Outline = false;
                 Center = false;
                 Visible = false;
-                ZIndex = 3;
+                ZIndex = 5;
             })
 
             table.insert(library.tabs[tabname].instances,text)
@@ -1272,7 +1273,7 @@ function library:addtab(tabname)
             function updatePosition()
                 local offset = getlenghtfromtext(key.Text)
                 currentlenght = offset
-                key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,instancey-15)
+                key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,thisy-15)
                 for _,v in pairs(library.interactable) do
                     if v.drawing == key then
                         v.offset = main.Position-key.Position
@@ -1610,31 +1611,3 @@ table.insert(library.connections,
         end
     end)
 )
---// END OF LIBRARY //--
-
-local tab = library:addtab('tab1')
-library:addtab('tab2')
-local section = tab:addsection('section')
-section:addtoggle({text = 'toggle',flag = 'toggle',value = false,callback = function(value)
-    print(value)
-end}):addcolorpicker({flag = 'colorpicker',value = Color3.new(1,1,1),callback = function(value)
-    print(value)
-end})
-section:addlabel({text = 'label'})
-section:addbutton({text = 'button',flag = 'button',callback = function()
-    print('pressed')
-end})
-section:addslider({text = 'slider',flag = 'slider',value = -10,min = -20, max = 100, suffix = '%',callback = function(value)
-    print(value)
-end})
-section:addkeybind({text = 'keybind',flag = 'keybind',value = Enum.KeyCode.Space,callback = function(value)
-    print(value)
-end})
-section:addcolorpicker({text = 'colorpicker',flag = 'colorpicker2',value = Color3.new(1,1,0),callback = function(value)
-    print(value)
-end})
-section:adddropdown({text = 'dropdown',flag = 'dropdown',options = {'option1','option2','option3','option4'},callback = function(value)
-    print(value)
-end})
-
-selecttab('tab1')
