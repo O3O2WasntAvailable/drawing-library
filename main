@@ -50,6 +50,9 @@ local library = {
     tabs = {};
     interactable = {};
 }
+if getgenv().librarysettings then
+    library = getgenv().librarysettings
+end
 
 local classes = {
     ['square'] = 'Square';
