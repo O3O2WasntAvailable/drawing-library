@@ -1225,8 +1225,8 @@ function library:addtab(tabname)
             info.mode = info.mode == 'hold' and info.mode or 'toggle'
             info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'EnumItem') and info.value or nil
 
+            local thisy = instancey
             instancey += 18
-            local thisy = instancey + 5
             frame.Size += Vector2.new(0,18)
             if side == 2 then
                 side2y += 18
