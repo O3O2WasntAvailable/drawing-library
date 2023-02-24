@@ -1,3 +1,4 @@
+--2/13/2023
 --// Variables //--
 getgenv().uis = game:GetService('UserInputService')
 getgenv().run = game:GetService('RunService')
@@ -1236,7 +1237,7 @@ function library:addtab(tabname)
             local text = draw('text',{
                 Color = library.theme.textcolor;
                 Text = info.text;
-                Position = frame.Position + Vector2.new(5,instancey-15);
+                Position = frame.Position + Vector2.new(5,instancey-10);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
@@ -1247,7 +1248,7 @@ function library:addtab(tabname)
             local key = draw('text',{
                 Color = library.theme.textcolor;
                 Text = '[none]';
-                Position = frame.Position + Vector2.new(frame.Size.X-5,instancey-15);
+                Position = frame.Position + Vector2.new(frame.Size.X-5,instancey-10);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
