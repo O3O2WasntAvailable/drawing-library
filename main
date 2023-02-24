@@ -1237,7 +1237,7 @@ function library:addtab(tabname)
             local text = draw('text',{
                 Color = library.theme.textcolor;
                 Text = info.text;
-                Position = frame.Position + Vector2.new(5,instancey-15);
+                Position = frame.Position + Vector2.new(5,instancey-12);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
@@ -1248,7 +1248,7 @@ function library:addtab(tabname)
             local key = draw('text',{
                 Color = library.theme.textcolor;
                 Text = '[none]';
-                Position = frame.Position + Vector2.new(frame.Size.X-5,instancey-15);
+                Position = frame.Position + Vector2.new(frame.Size.X-5,instancey-12);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
@@ -1266,7 +1266,7 @@ function library:addtab(tabname)
             function updatePosition()
                 local offset = getlenghtfromtext(key.Text)
                 currentlenght = offset
-                key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,thisy-15)
+                key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,thisy-12)
                 for _,v in pairs(library.interactable) do
                     if v.drawing == key then
                         v.offset = main.Position-key.Position
