@@ -1225,13 +1225,13 @@ function library:addtab(tabname)
             info.mode = info.mode == 'hold' and info.mode or 'toggle'
             info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'EnumItem') and info.value or nil
 
-            instancey += 0
+            instancey += 18
             local thisy = instancey
-            frame.Size += Vector2.new(0,0)
+            frame.Size += Vector2.new(0,18)
             if side == 2 then
-                side2y += 0
+                side2y += 18
             else
-                side1y += 0
+                side1y += 18
             end
 
             local text = draw('text',{
