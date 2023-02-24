@@ -1267,6 +1267,7 @@ function library:addtab(tabname)
                 local offset = getlenghtfromtext(key.Text)
                 currentlenght = offset
                 key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,thisy-12)
+                print('hello this updated')
                 for _,v in pairs(library.interactable) do
                     if v.drawing == key then
                         v.offset = main.Position-key.Position
