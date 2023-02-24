@@ -1175,7 +1175,7 @@ function library:addtab(tabname)
                 return info.value
             end
 
-            function update()
+            local function update()
                 local percent = math.clamp(uis:GetMouseLocation().X - bar.Position.X, 0, bar.Size.X) / bar.Size.X
                 local value = math.floor((info.min + (info.max - info.min) * percent) / info.float) * info.float
                 value = math.clamp(value, info.min, info.max)
@@ -1267,7 +1267,6 @@ function library:addtab(tabname)
                 local offset = getlenghtfromtext(key.Text)
                 currentlenght = offset
                 key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,thisy-12)
-                print('hello this updated')
                 for _,v in pairs(library.interactable) do
                     if v.drawing == key then
                         v.offset = main.Position-key.Position
@@ -1366,7 +1365,7 @@ function library:addtab(tabname)
             local text = draw('text',{
                 Color = library.theme.textcolor;
                 Text = info.text;
-                Position = frame.Position + Vector2.new(5,instancey-14);
+                Position = frame.Position + Vector2.new(5,instancey-10);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
@@ -1380,7 +1379,7 @@ function library:addtab(tabname)
             local button = draw('square',{
                 Color = info.value;
                 Size = Vector2.new(16,8);
-                Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+8);
+                Position = frame.Position + Vector2.new(frame.Size.X-16+xinstances,thisy+12);
                 Visible = false;
                 Filled = true;
                 ZIndex = 4;
