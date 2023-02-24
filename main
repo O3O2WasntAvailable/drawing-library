@@ -835,7 +835,7 @@ function library:addtab(tabname)
                 uis.InputBegan:Connect(function(input)
                     if not library.open then return end
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        if checkmousehovering(Vector2.new(frame.Size.X+xinstances,18),Vector2.new(frame.Position.X,button.Position.Y-5)) then
+                        if checkmousehovering(Vector2.new(frame.Size.X+xinstances,18),Vector2.new(frame.Position.X,button.Position.Y-4)) then
                             toggle:set(not info.value)
                         end
                     end
@@ -1225,13 +1225,13 @@ function library:addtab(tabname)
             info.mode = info.mode == 'hold' and info.mode or 'toggle'
             info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'EnumItem') and info.value or nil
 
-            instancey += 18
+            instancey += 14
             local thisy = instancey
-            frame.Size += Vector2.new(0,18)
+            frame.Size += Vector2.new(0,14)
             if side == 2 then
-                side2y += 18
+                side2y += 14
             else
-                side1y += 18
+                side1y += 14
             end
 
             local text = draw('text',{
