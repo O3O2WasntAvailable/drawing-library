@@ -1226,19 +1226,18 @@ function library:addtab(tabname)
             info.value = (typeof(info.value) == 'string' or typeof(info.value) == 'EnumItem') and info.value or nil
 
             instancey += 18
+            local thisy = instancey
             frame.Size += Vector2.new(0,18)
             if side == 2 then
                 side2y += 18
             else
                 side1y += 18
             end
-            local off1 = frame.Position + Vector2.new(5,instancey-15)
-            local off2 = Vector2.new(frame.Size.X-5,instancey-15)
 
             local text = draw('text',{
                 Color = library.theme.textcolor;
                 Text = info.text;
-                Position = off1;
+                Position = frame.Position + Vector2.new(5,instancey-15);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
@@ -1249,7 +1248,7 @@ function library:addtab(tabname)
             local key = draw('text',{
                 Color = library.theme.textcolor;
                 Text = '[none]';
-                Position = off2;
+                Position = frame.Position + Vector2.new(frame.Size.X-5,instancey-15);
                 Font = library.theme.font;
                 Size = 15;
                 Outline = false;
@@ -1267,7 +1266,7 @@ function library:addtab(tabname)
             function updatePosition()
                 local offset = getlenghtfromtext(key.Text)
                 currentlenght = offset
-                key.Position = frame.Position + off2
+                key.Position = frame.Position + Vector2.new(frame.Size.X-5-offset,thisy-15)
                 for _,v in pairs(library.interactable) do
                     if v.drawing == key then
                         v.offset = main.Position-key.Position
