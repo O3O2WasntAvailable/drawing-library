@@ -1,4 +1,3 @@
---2/13/2023
 --// Variables //--
 getgenv().uis = game:GetService('UserInputService')
 getgenv().run = game:GetService('RunService')
@@ -64,6 +63,7 @@ local classes = {
     ['triangle'] = 'Triangle';
 }
 
+function library:setopen() end
 
 --// Functions //--
 function library:unload()
@@ -251,14 +251,6 @@ if library.watermark then
         watermarkborder2.Size = Vector2.new(getlenghtfromtext(watermarktext.Text) + 16,24)
     end
     updatewatermark()
-end
-
-
-function library:setopen(value)
-    library.open = value
-    for _,v in pairs(library.interactable) do
-        v.drawing.Visible = library.open
-    end
 end
 
 spawn(function()
@@ -469,17 +461,17 @@ setcolorpicker(library.theme.accent)
 local tabX = 0
 local selected = nil
 function selecttab(name)
-    if name == selected then return end
-    library.tabs[name].text.Color = library.theme.accent
-    if selected ~= nil then
-        library.tabs[selected].text.Color = library.theme.textcolor
-        for _,v in pairs(library.tabs[selected].instances) do
+    for _,tab in pairs(library.tabs) do
+        tab.text.Color = library.theme.textcolor
+        for _,v in pairs(tab.instances) do
             v.Visible = false
         end
     end
-    
-    for _,v in pairs(library.tabs[name].instances) do
-        v.Visible = true
+    if name ~= nil then
+        library.tabs[name].text.Color = library.theme.accent
+        for _,v in pairs(library.tabs[name].instances) do
+            v.Visible = true
+        end
     end
     selected = name
 end
@@ -712,7 +704,6 @@ function library:addtab(tabname)
 
         function section:addtoggle(info)
             local toggle = {}
-	    print(http:JSONEncode(info))
             info.text = typeof(info.text) == 'string' and info.text or ''
             info.flag = typeof(info.flag) == 'string' and info.flag or info.text
             info.callback = typeof(info.callback) == 'function' and info.callback or function() end
@@ -1512,7 +1503,7 @@ function library:addtab(tabname)
                 Size = button.Size + Vector2.new(2,2);
                 Position = button.Position + Vector2.new(-1,-1);
                 Filled = true;
-                Visible = true;
+                Visible = false;
                 ZIndex = 3;
             })
             local buttontext = draw('text',{
@@ -1573,6 +1564,19 @@ function library:addtab(tabname)
     return tab
 end
 
+--// Opening and closing //--
+function library:setopen(value)
+    library.open = value
+    for _,v in pairs(library.interactable) do
+        v.drawing.Visible = library.open
+    end
+    
+    if library.open then
+        selecttab(selected)
+    end
+end
+
+library:setopen(library.open)
 --// Draggable //--
 local dragging = false
 local offset
